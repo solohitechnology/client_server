@@ -1,36 +1,32 @@
-const express = require('express');
-const router = express.Router()
-const  puppeteer = require('puppeteer');
-const path = require('path')
-const fs = require('fs')
-const mime = require('mime')
+const express = require("express");
+const router = express.Router();
+const puppeteer = require("puppeteer");
+const path = require("path");
+const fs = require("fs");
+const mime = require("mime");
 
+router.post("/generate-certificate", async (req, res) => {
+  const { name, course } = req.body;
 
-router.post('/generate-certificate', async (req, res) => {
+  try {
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
 
-    const { name, course, } = req.body;
+    const currentDate = new Date();
+    const formattedDate = currentDate.toLocaleDateString();
 
-    try {
-        const browser = await puppeteer.launch();
-        const page = await browser.newPage();
+    // Read the logo image file
+    const logoPath = path.join(__dirname, "logo_path", "logo.jpeg");
+    const logoData = fs.readFileSync(logoPath);
+    const logoBase64 = logoData.toString("base64");
+    const logoMimeType = mime.lookup(logoPath);
 
-        const currentDate = new Date();
-        const formattedDate = currentDate.toLocaleDateString();
+    const logoPath2 = path.join(__dirname, "logo_path", "iip2.jpg");
+    const logoData2 = fs.readFileSync(logoPath2);
+    const logoBase642 = logoData2.toString("base64");
+    const logoMimeType2 = mime.lookup(logoPath2);
 
-        // Read the logo image file
-        const logoPath = path.join(__dirname, 'logo_path', 'logo.jpeg');
-        const logoData = fs.readFileSync(logoPath);
-        const logoBase64 = logoData.toString('base64');
-        const logoMimeType = mime.lookup(logoPath);
-
-        const logoPath2 = path.join(__dirname, 'logo_path', 'iip2.jpg');
-        const logoData2 = fs.readFileSync(logoPath2);
-        const logoBase642 = logoData2.toString('base64');
-        const logoMimeType2 = mime.lookup(logoPath2);
-
-
-
-        const html = `  <html>
+    const html = `  <html>
   
   <head>
       <style type='text/css'>
@@ -251,26 +247,24 @@ router.post('/generate-certificate', async (req, res) => {
   
   </html>`;
 
-        await page.setContent(html);
+    await page.setContent(html);
 
-        const pdfBuffer = await page.pdf({
-            format: 'A4',
-            printBackground: true,
-        });
+    const pdfBuffer = await page.pdf({
+      format: "A4",
+      printBackground: true,
+    });
 
-        res.set({
-            'Content-Type': 'application/pdf',
-            'Content-Disposition': 'attachment; filename="certificate.pdf"',
-        });
-        res.send(pdfBuffer);
+    res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": 'attachment; filename="certificate.pdf"',
+    });
+    res.send(pdfBuffer);
 
-        await browser.close();
-    } catch (error) {
-        console.error('Certificate generation error:', error);
-        res.status(500).send('Certificate generation error');
-    }
+    await browser.close();
+  } catch (error) {
+    console.error("Certificate generation error:", error);
+    res.status(500).send("Certificate generation error");
+  }
 });
 
 module.exports = router;
-
-
